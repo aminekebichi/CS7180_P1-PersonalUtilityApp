@@ -1,0 +1,233 @@
+# ============================================================
+# .antigravityrules — Let's Cook (CS7180 P2)
+# AI coding instructions for Antigravity / IDE AI tools
+# ============================================================
+
+# ============================================================
+# 1. PROJECT CONTEXT
+# ============================================================
+
+## Project Overview
+"Let's Cook" is a full-stack recipe suggestion web app that helps home cooks
+discover meals they can make right now based on their available ingredients.
+Users manage a pantry inventory, receive smart recipe suggestions with
+ingredient match percentages, view full recipe details, and track their
+cooking history.
+
+## Tech Stack
+- Framework:     Next.js 14 (App Router)
+- Styling:       TailwindCSS (custom orange/green theme)
+- Language:      TypeScript (strict mode)
+- Database:      PostgreSQL (via Prisma ORM)
+- Auth:          NextAuth.js (JWT strategy)
+- API:           Next.js API Routes (/app/api/*)
+- Testing:       Jest + React Testing Library (unit/integration), Playwright (E2E)
+- CI/CD:         GitHub Actions
+- Deployment:    Vercel (production)
+- Node version:  18+
+
+## Folder Structure
+```
+/app
+  /api              → Next.js API route handlers
+    /auth           → NextAuth config
+    /recipes        → Recipe endpoints
+    /ingredients    → Ingredient endpoints
+    /pantry         → User pantry endpoints
+    /cooking-log    → Cooking history endpoints
+  /(routes)         → Page components
+    /page.tsx       → Homepage (recipe catalog)
+    /pantry/        → Pantry management page
+    /recipes/[id]/  → Recipe detail page
+    /history/       → Cooking history page
+/components
+  /ui               → Reusable UI primitives (Button, Card, Modal, Toast)
+  /layout           → Header, Navigation, FilterPanel
+  /recipes          → RecipeCard, RecipeGrid, RecipeDetail
+  /pantry           → IngredientList, IngredientSearch, GroceryList
+/lib
+  /db.ts            → Prisma client singleton
+  /auth.ts          → NextAuth config export
+  /utils.ts         → Shared utility functions
+  /types.ts         → Shared TypeScript types and interfaces
+/prisma
+  schema.prisma     → Database schema
+  /migrations       → Prisma migration files
+  seed.ts           → Database seed script (23 recipes, 85+ ingredients)
+/tests
+  /unit             → Jest unit tests
+  /integration      → Jest integration tests (API routes)
+  /e2e              → Playwright end-to-end tests
+```
+
+## Naming Conventions
+- Components:       PascalCase (e.g., RecipeCard.tsx)
+- Hooks:            camelCase prefixed with "use" (e.g., usePantry.ts)
+- API routes:       kebab-case folders (e.g., /api/cooking-log)
+- Database tables:  snake_case (e.g., recipe_ingredients)
+- CSS classes:      Tailwind utility classes only — no custom CSS files
+- Variables:        camelCase
+- Constants:        UPPER_SNAKE_CASE
+- Types/Interfaces: PascalCase, prefix interfaces with "I" only if ambiguous
+
+## Coding Standards
+- TypeScript strict mode — no implicit `any`
+- All async functions must have proper error handling (try/catch)
+- API responses must follow this shape:
+  { data: T | null, error: string | null, status: number }
+- No inline styles — use Tailwind classes exclusively
+- Components should be small and single-responsibility
+- Avoid prop drilling deeper than 2 levels — use context or hooks
+- All user-facing strings should be in English
+
+## Testing Strategy
+- Target: 80%+ coverage across unit + integration tests
+- Unit tests: all utility functions, hooks, and pure components
+- Integration tests: all API route handlers using supertest
+- E2E tests: critical user flows (login, pantry update, recipe suggestion)
+- Test files live alongside source: ComponentName.test.tsx
+- Use React Testing Library queries (getByRole, getByText) — avoid getByTestId
+
+# ============================================================
+# 2. PRD & DESIGN REFERENCES
+# ============================================================
+
+## PRD Reference
+The full PRD is in /docs/PRD.md and covers:
+- Problem: home cooks waste 15-30 min deciding what to cook
+- Target user: amateur home cooks managing kitchen ingredients
+- 5 core user stories (see below)
+- Acceptance criteria for each story
+
+## Design System
+Primary color:   Orange / Amber (#f59e0b — Tailwind: amber-500)
+Secondary color: Green (#22c55e — Tailwind: green-500)
+Background:      White (#ffffff)
+Text:            Gray-900 for headings, Gray-600 for body
+Borders:         Orange for active/current items, Green for suggested/positive items
+Animations:      300ms ease-in-out opacity transitions on all interactive elements
+Corner radius:   rounded-lg on cards, rounded-full on badges/tags
+Font:            System font stack (no custom fonts required)
+
+## Key UI Components
+- RecipeCard: Shows recipe name, thumbnail, difficulty badge, prep/cook time,
+  and ingredient match % (e.g. "85% match"). Perfect matches get a green border.
+  Near-matches get an amber border. Cards are fully clickable.
+- IngredientCard: Clickable box showing ingredient name in capitalized format.
+  Current pantry items have orange borders with a minus icon.
+  Suggested items have green borders with a plus icon.
+- FilterPanel: Slide-out panel triggered by filter icon in header.
+  Contains checkboxes for cuisine type and dietary restrictions.
+  Active filters show as dismissible badges in the header.
+- Header: Sticky, consistent across all pages. Always shows hamburger menu icon
+  and filter icon. Logo/title is clickable and navigates to homepage.
+- Toast Notifications: Orange theme, appear for all pantry/list actions.
+  Auto-dismiss after 3 seconds.
+- Confirmation Modal: Appears before any destructive action (e.g. clear grocery list).
+  Has Cancel and Confirm buttons. Backdrop click dismisses.
+
+## User Flows (implement features in this order of priority)
+1. New user registers → logs in → lands on homepage with empty pantry prompt
+2. User navigates to Pantry → searches ingredients → adds to inventory
+3. Homepage recipe grid updates to show match percentages based on pantry
+4. User clicks recipe card → views full detail → marks as cooked
+5. Cooking log entry is clickable and navigates back to recipe detail
+6. Smart suggestions show top ingredients to buy to unlock more recipes
+7. User adds suggested ingredients to grocery list → moves all to pantry
+
+## Pages Summary
+- / (Home):         Filterable recipe grid with match percentages
+- /pantry:          Three sections — Suggested, Current Inventory, Grocery List
+- /recipes/[id]:    Full recipe detail with ingredients, steps, and "Mark as Cooked"
+- /history:         Chronological cooking log with clickable entries
+
+# ============================================================
+# 3. SCRUM & WORKFLOW INSTRUCTIONS
+# ============================================================
+
+## Branch Naming
+Format: <type>/<issue-number>-<short-description>
+Examples:
+  feature/4-pantry-ingredient-search
+  feature/5-recipe-suggestions
+  fix/12-grocery-list-bulk-add
+  chore/1-nextjs-project-setup
+  docs/9-api-documentation
+
+## Commit Message Format
+Format: <type>(#<issue>): <short description>
+Examples:
+  feat(#4): add ingredient search with dropdown
+  fix(#12): correct bulk add state management
+  chore(#1): initialize Next.js with Tailwind
+  test(#5): add unit tests for match percentage util
+  docs(#9): add OpenAPI spec for recipes endpoint
+
+Types: feat | fix | chore | test | docs | refactor | style
+
+## PR Workflow
+- Every PR must reference its GitHub Issue: "Closes #<issue-number>"
+- PR title must match commit format
+- PRs require passing CI (tests + lint) before merge
+- Keep PRs small and focused — one issue per PR
+- Add screenshots for any UI changes
+
+## Referencing Issues in Code
+- Use TODO comments with issue numbers for known gaps:
+  // TODO(#14): add real-time update when pantry changes
+- Never leave untracked TODOs — always link to a GitHub Issue
+
+# ============================================================
+# 4. DO'S AND DON'TS
+# ============================================================
+
+## DO
+- Use Prisma for all database queries — never raw SQL
+- Use NextAuth.js session for auth checks in API routes
+- Use TailwindCSS utility classes for all styling
+- Use TypeScript interfaces from /lib/types.ts for shared types
+- Return consistent API response shapes: { data, error, status }
+- Write tests alongside every new component or API route
+- Use Zod for runtime validation on all API request bodies
+- Use next/image for all recipe images (optimized loading)
+- Handle loading and error states in every component
+- Use React Server Components where data fetching is needed (no useEffect for fetches)
+
+## DON'T
+- Don't use localStorage for user data — all persistence must go through the database
+- Don't use inline styles or custom CSS files — Tailwind only
+- Don't use `any` type in TypeScript
+- Don't skip error handling in async functions
+- Don't create new color classes — use amber-500 and green-500 from the design system
+- Don't use class components — functional components with hooks only
+- Don't make direct database calls from client components
+- Don't commit secrets or .env files
+- Don't use `console.log` in production code — use a proper logger or remove before merge
+- Don't create API routes without input validation (use Zod)
+
+## Preferred Libraries
+- Zod:            Request/response validation
+- Prisma:         Database ORM
+- NextAuth.js:    Authentication
+- Lucide React:   Icons (consistent with existing design)
+- next/image:     Image optimization
+- Jest + RTL:     Unit and integration testing
+- Playwright:     E2E testing
+
+## Security Requirements
+- All user-specific API routes must verify NextAuth session
+- Passwords handled entirely by NextAuth — never store raw passwords
+- Environment variables for all secrets (DATABASE_URL, NEXTAUTH_SECRET, etc.)
+- Validate and sanitize all user inputs with Zod before database operations
+- Use parameterized queries via Prisma — no raw string interpolation in queries
+
+## Accessibility Requirements
+- All interactive elements must have accessible labels (aria-label or visible text)
+- Color is never the only indicator of state — always pair with icon or text
+- Keyboard navigation must work for all modals and dropdowns
+- Images must have descriptive alt text
+- Minimum touch target size: 44x44px on mobile
+
+# ============================================================
+# END OF RULES FILE
+# ============================================================
